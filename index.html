@@ -124,24 +124,37 @@
                     </div>
                 </div>
 
-                <!-- Plaguicida Autocomplete -->
-                <div class="form-field">
-                    <div class="field-header">
-                        <i class="fas fa-spray-can"></i>
-                        <label>Plaguicida</label>
-                    </div>
-                    <div id="plaguicida-container"></div>
-                </div>
+               
+<!-- POR ESTO: -->
+<div class="form-field">
+    <div class="field-header">
+        <i class="fas fa-spray-can"></i>
+        <label>Plaguicida</label>
+    </div>
+    <div class="autocomplete-container" id="plaguicida-container">
+        <input type="text" 
+               class="autocomplete-input" 
+               id="plaguicida-input"
+               placeholder="Buscar plaguicida...">
+        <div class="autocomplete-suggestions"></div>
+    </div>
+    <div class="pesticide-details" id="plaguicida-details" style="display: none;"></div>
+</div>
 
-                <!-- Cultivo Autocomplete -->
-                <div class="form-field">
-                    <div class="field-header">
-                        <i class="fas fa-seedling"></i>
-                        <label>Cultivo</label>
-                    </div>
-                    <div id="cultivo-container"></div>
-                </div>
-
+<div class="form-field">
+    <div class="field-header">
+        <i class="fas fa-seedling"></i>
+        <label>Cultivo</label>
+    </div>
+    <div class="autocomplete-container" id="cultivo-container">
+        <input type="text" 
+               class="autocomplete-input" 
+               id="cultivo-input"
+               placeholder="Buscar cultivo...">
+        <div class="autocomplete-suggestions"></div>
+    </div>
+    <div class="crop-details" id="cultivo-details" style="display: none;"></div>
+</div>
                 <!-- Área -->
                 <div class="form-field">
                     <div class="field-header">
