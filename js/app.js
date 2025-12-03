@@ -1,47 +1,51 @@
 // ============================================
-// INICIALIZACIÓN DE LA APLICACIÓN
+// CORRECCIONES PARA TU APP.JS - VERSIÓN FUNCIONAL
 // ============================================
 
-// Función global para alertas (DEBE ESTAR AL INICIO)
+// Función global para alertas
 window.showAlert = function(message, type = 'info') {
     // Eliminar alertas existentes
-    document.querySelectorAll('.alert').forEach(alert => alert.remove());
+    document.querySelectorAll('.toast').forEach(toast => toast.remove());
     
     // Crear alerta
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type}`;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
     
     // Icono según tipo
     let icon = 'info-circle';
     if (type === 'success') icon = 'check-circle';
     if (type === 'warning') icon = 'exclamation-triangle';
-    if (type === 'danger') icon = 'times-circle';
+    if (type === 'danger' || type === 'error') icon = 'times-circle';
     
-    alertDiv.innerHTML = `
+    toast.innerHTML = `
         <i class="fas fa-${icon}"></i>
         <span>${message}</span>
     `;
     
+    const toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        const container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+        container.appendChild(toast);
+    } else {
+        toastContainer.appendChild(toast);
+    }
+    
+    // Mostrar con animación
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
     // Auto-eliminar después de 5 segundos
     setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.style.opacity = '0';
-            alertDiv.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.parentNode.removeChild(alertDiv);
-                }
-            }, 300);
-        }
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
     }, 5000);
-    
-    document.body.appendChild(alertDiv);
-};
-
-// Función para cerrar modal
-window.closeModal = function() {
-    const modal = document.getElementById('successModal');
-    if (modal) modal.style.display = 'none';
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -52,18 +56,14 @@ async function initApplication() {
     console.log('🌱 Iniciando AgroTracebility...');
     
     try {
-        // 1. Configurar fecha y hora
-        updateDateTime();
-        setInterval(updateDateTime, 60000);
-        
-        // 2. Cargar datos iniciales
-        loadInitialData();
-        
-        // 3. Configurar eventos
+        // 1. Configurar eventos
         setupEventListeners();
         
-        // 4. Inicializar componentes
-        initComponents();
+        // 2. Configurar valores por defecto
+        setDefaultValues();
+        
+        // 3. Configurar autocompletado
+        setupAutocomplete();
         
         console.log('✅ AgroTracebility inicializado correctamente');
         showAlert('Sistema listo para usar', 'success');
@@ -78,52 +78,29 @@ async function initApplication() {
 // FUNCIONES DE INICIALIZACIÓN
 // ============================================
 
-function updateDateTime() {
-    const now = new Date();
-    const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    };
-    const dateElement = document.getElementById('current-date');
-    if (dateElement) {
-        dateElement.textContent = now.toLocaleDateString('es-ES', options);
-    }
+function setDefaultValues() {
+    // Valores por defecto para pruebas
+    const tempInput = document.getElementById('temp-manual');
+    const humInput = document.getElementById('hum-manual');
+    const windInput = document.getElementById('wind-manual');
+    const tiempoInput = document.getElementById('tiempo-exposicion');
+    const areaInput = document.getElementById('area');
+    
+    if (tempInput) tempInput.value = '25';
+    if (humInput) humInput.value = '60';
+    if (windInput) windInput.value = '5';
+    if (tiempoInput) tiempoInput.value = '120';
+    if (areaInput) areaInput.value = '1.0';
 }
 
-function loadInitialData() {
-    console.log('📊 Cargando datos iniciales...');
+function setupAutocomplete() {
+    console.log('🔧 Configurando autocompletado...');
     
     // Configurar autocompletado para plaguicidas
     setupPesticideAutocomplete();
     
     // Configurar autocompletado para cultivos
     setupCropAutocomplete();
-    
-    // Configurar valores por defecto
-    setDefaultValues();
-}
-
-function initComponents() {
-    console.log('⚙️ Inicializando componentes...');
-    
-    // Inicializar tooltips
-    initTooltips();
-    
-    // Inicializar validaciones
-    initValidations();
-}
-
-function setDefaultValues() {
-    // Valores por defecto para pruebas
-    document.getElementById('temp-manual').value = '25';
-    document.getElementById('hum-manual').value = '60';
-    document.getElementById('wind-manual').value = '5';
-    document.getElementById('tiempo-exposicion').value = '120';
-    document.getElementById('area').value = '1.0';
 }
 
 // ============================================
@@ -132,270 +109,59 @@ function setDefaultValues() {
 
 function setupPesticideAutocomplete() {
     const tipoSelect = document.getElementById('tipo-plaguicida');
-    const plaguicidaContainer = document.getElementById('plaguicida-container');
+    const plaguicidaInput = document.getElementById('plaguicida-input');
     
-    if (!plaguicidaContainer) {
-        console.error('❌ No se encuentra #plaguicida-container');
-        return;
-    }
-    
-    console.log('🔧 Configurando autocompletado para plaguicidas...');
-    
-    // Crear contenedor de autocompletado
-    plaguicidaContainer.innerHTML = `
-        <div class="autocomplete-container">
-            <input type="text" 
-                   id="plaguicida-search" 
-                   class="autocomplete-input" 
-                   placeholder="Seleccione tipo primero..."
-                   autocomplete="off"
-                   disabled>
-            <div id="plaguicida-suggestions" class="autocomplete-suggestions"></div>
-        </div>
-        <input type="hidden" id="plaguicida-id" value="">
-        <div id="plaguicida-details" class="pesticide-details" style="display: none;"></div>
-    `;
-    
-    const searchInput = document.getElementById('plaguicida-search');
-    const suggestionsDiv = document.getElementById('plaguicida-suggestions');
-    const hiddenInput = document.getElementById('plaguicida-id');
-    const detailsDiv = document.getElementById('plaguicida-details');
-    
-    if (!searchInput || !suggestionsDiv) {
-        console.error('❌ Error creando elementos de autocompletado');
+    if (!tipoSelect || !plaguicidaInput) {
+        console.error('❌ Elementos de plaguicida no encontrados');
         return;
     }
     
     // Evento cuando cambia el tipo
     tipoSelect.addEventListener('change', function() {
         const tipo = this.value;
-        searchInput.value = '';
-        hiddenInput.value = '';
-        if (detailsDiv) detailsDiv.style.display = 'none';
+        plaguicidaInput.value = '';
         
         if (tipo) {
-            searchInput.placeholder = `Buscar ${tipo.toLowerCase()}...`;
-            searchInput.disabled = false;
-            
-            // Mostrar todos los plaguicidas del tipo seleccionado
-            const filtered = PESTICIDES_DB.filter(p => p.tipo === tipo);
-            showPesticideSuggestions(filtered);
+            plaguicidaInput.disabled = false;
+            plaguicidaInput.placeholder = `Buscar ${tipo.toLowerCase()}...`;
         } else {
-            searchInput.placeholder = 'Seleccione tipo primero';
-            searchInput.disabled = true;
-            suggestionsDiv.innerHTML = '';
-            suggestionsDiv.classList.remove('active');
+            plaguicidaInput.disabled = true;
+            plaguicidaInput.placeholder = 'Seleccione tipo primero...';
         }
+        
+        // Ocultar detalles previos
+        const detailsDiv = document.getElementById('plaguicida-details');
+        if (detailsDiv) detailsDiv.style.display = 'none';
     });
     
     // Evento de búsqueda en tiempo real
-    searchInput.addEventListener('input', function() {
+    plaguicidaInput.addEventListener('input', function() {
         const tipo = tipoSelect.value;
         const query = this.value.toLowerCase();
+        const suggestionsDiv = this.parentElement.querySelector('.autocomplete-suggestions');
         
-        if (tipo && query.length >= 2) {
-            const filtered = PESTICIDES_DB.filter(p => 
-                p.tipo === tipo && 
-                p.nombre.toLowerCase().includes(query)
-            );
-            showPesticideSuggestions(filtered);
-        } else if (tipo) {
-            const filtered = PESTICIDES_DB.filter(p => p.tipo === tipo);
-            showPesticideSuggestions(filtered);
-        } else {
-            suggestionsDiv.innerHTML = '';
-            suggestionsDiv.classList.remove('active');
+        if (!tipo || query.length < 2) {
+            if (suggestionsDiv) suggestionsDiv.innerHTML = '';
+            return;
         }
+        
+        // Filtrar plaguicidas
+        const filtered = PESTICIDES_DB.filter(p => 
+            p.tipo === tipo && 
+            p.nombre.toLowerCase().includes(query)
+        );
+        
+        showAutocompleteSuggestions(filtered, suggestionsDiv, 'plaguicida');
     });
     
     // Evento para cerrar sugerencias al hacer clic fuera
     document.addEventListener('click', function(e) {
-        if (!plaguicidaContainer.contains(e.target)) {
-            suggestionsDiv.classList.remove('active');
+        if (!e.target.closest('.autocomplete-container')) {
+            document.querySelectorAll('.autocomplete-suggestions').forEach(div => {
+                div.innerHTML = '';
+            });
         }
     });
-    
-    console.log('✅ Autocompletado de plaguicidas configurado');
-}
-
-function showPesticideSuggestions(pesticides) {
-    const suggestionsDiv = document.getElementById('plaguicida-suggestions');
-    if (!suggestionsDiv) return;
-    
-    if (pesticides.length === 0) {
-        suggestionsDiv.innerHTML = `
-            <div class="autocomplete-no-results">
-                <i class="fas fa-search"></i>
-                <p>No se encontraron plaguicidas</p>
-            </div>
-        `;
-        suggestionsDiv.classList.add('active');
-        return;
-    }
-    
-    let html = '';
-    
-    pesticides.forEach(pesticide => {
-        const toxicityClass = pesticide.toxicidad.toLowerCase();
-        
-        html += `
-            <div class="autocomplete-suggestion" 
-                 data-id="${pesticide.id}"
-                 data-name="${pesticide.nombre}">
-                <div class="suggestion-icon">
-                    <i class="${pesticide.icono}"></i>
-                </div>
-                <div class="suggestion-content">
-                    <div class="suggestion-title">${pesticide.nombre}</div>
-                    <div class="suggestion-subtitle">
-                        <span class="info-badge badge-type">${pesticide.clase}</span>
-                        <span class="info-badge badge-toxicity ${toxicityClass}">
-                            <i class="fas fa-exclamation-triangle"></i> ${pesticide.toxicidad}
-                        </span>
-                        <span class="info-badge badge-dosis">
-                            ${pesticide.dosisBase} ${pesticide.unidad}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    html += `
-        <div class="autocomplete-count">
-            ${pesticides.length} resultado${pesticides.length !== 1 ? 's' : ''}
-        </div>
-    `;
-    
-    suggestionsDiv.innerHTML = html;
-    suggestionsDiv.classList.add('active');
-    
-    // Agregar eventos a las sugerencias
-    document.querySelectorAll('.autocomplete-suggestion').forEach(suggestion => {
-        suggestion.addEventListener('click', function() {
-            selectPesticide(this);
-        });
-    });
-}
-
-function selectPesticide(element) {
-    const pesticideId = element.dataset.id;
-    const pesticideName = element.dataset.name;
-    const searchInput = document.getElementById('plaguicida-search');
-    const hiddenInput = document.getElementById('plaguicida-id');
-    const detailsDiv = document.getElementById('plaguicida-details');
-    const suggestionsDiv = document.getElementById('plaguicida-suggestions');
-    
-    if (!searchInput || !hiddenInput) {
-        console.error('❌ Error: Elementos no encontrados');
-        return;
-    }
-    
-    // Buscar el plaguicida en la base de datos
-    const pesticide = PESTICIDES_DB.find(p => p.id === parseInt(pesticideId));
-    if (!pesticide) {
-        showAlert('Plaguicida no encontrado', 'danger');
-        return;
-    }
-    
-    // Actualizar inputs
-    searchInput.value = pesticideName;
-    hiddenInput.value = pesticideId;
-    
-    // Mostrar detalles
-    if (detailsDiv) {
-        detailsDiv.innerHTML = generatePesticideDetails(pesticide);
-        detailsDiv.style.display = 'block';
-    }
-    
-    // Ocultar sugerencias
-    if (suggestionsDiv) {
-        suggestionsDiv.classList.remove('active');
-    }
-    
-    showAlert(`✅ ${pesticideName} seleccionado`, 'success');
-}
-
-function generatePesticideDetails(pesticide) {
-    const toxicityColor = {
-        'Alta': '#dc3545',
-        'Media': '#ffc107',
-        'Baja': '#28a745'
-    };
-    
-    return `
-        <div class="details-header">
-            <div class="details-icon">
-                <i class="${pesticide.icono}"></i>
-            </div>
-            <div class="details-title">
-                <h3>${pesticide.nombre}</h3>
-                <div class="details-subtitle">
-                    <span class="toxicity-badge" style="background: ${toxicityColor[pesticide.toxicidad]}">
-                        ${pesticide.toxicidad}
-                    </span>
-                    <span>${pesticide.clase}</span>
-                </div>
-            </div>
-        </div>
-        <div class="details-body">
-            <div class="details-row">
-                <div class="detail-item">
-                    <i class="fas fa-prescription-bottle"></i>
-                    <div>
-                        <small>Dosis Base</small>
-                        <strong>${pesticide.dosisBase} ${pesticide.unidad}</strong>
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <i class="far fa-calendar-times"></i>
-                    <div>
-                        <small>Carencia Base</small>
-                        <strong>${pesticide.carenciaBase} días</strong>
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <div>
-                        <small>LMR</small>
-                        <strong>${pesticide.lmr} ppm</strong>
-                    </div>
-                </div>
-            </div>
-            ${pesticide.usos && pesticide.usos.length > 0 ? `
-                <div class="details-section">
-                    <h4><i class="fas fa-bugs"></i> Usos Principales</h4>
-                    <div class="tags-container">
-                        ${pesticide.usos.map(uso => `<span class="tag">${uso}</span>`).join('')}
-                    </div>
-                </div>
-            ` : ''}
-            ${pesticide.epiRequerido && pesticide.epiRequerido.length > 0 ? `
-                <div class="details-section">
-                    <h4><i class="fas fa-user-shield"></i> EPI Requerido</h4>
-                    <div class="epi-icons">
-                        ${pesticide.epiRequerido.map(epi => `
-                            <div class="epi-item">
-                                <i class="fas fa-${getEPIIcon(epi)}"></i>
-                                <small>${epi}</small>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            ` : ''}
-        </div>
-    `;
-}
-
-function getEPIIcon(epi) {
-    const icons = {
-        'guantes': 'hand-paper',
-        'mascarilla': 'head-side-mask',
-        'overol': 'tshirt',
-        'gafas': 'glasses',
-        'botas': 'shoe-prints'
-    };
-    return icons[epi] || 'shield-alt';
 }
 
 // ============================================
@@ -403,232 +169,189 @@ function getEPIIcon(epi) {
 // ============================================
 
 function setupCropAutocomplete() {
-    const cropContainer = document.getElementById('cultivo-container');
+    const cultivoInput = document.getElementById('cultivo-input');
     
-    if (!cropContainer) {
-        console.error('❌ No se encuentra #cultivo-container');
-        return;
-    }
-    
-    console.log('🔧 Configurando autocompletado para cultivos...');
-    
-    // Crear contenedor de autocompletado
-    cropContainer.innerHTML = `
-        <div class="autocomplete-container">
-            <input type="text" 
-                   id="cultivo-search" 
-                   class="autocomplete-input" 
-                   placeholder="Buscar cultivo por nombre o tipo..."
-                   autocomplete="off">
-            <div id="cultivo-suggestions" class="autocomplete-suggestions"></div>
-        </div>
-        <input type="hidden" id="cultivo-id" value="">
-        <div id="cultivo-details" class="crop-details" style="display: none;"></div>
-    `;
-    
-    const searchInput = document.getElementById('cultivo-search');
-    const suggestionsDiv = document.getElementById('cultivo-suggestions');
-    const hiddenInput = document.getElementById('cultivo-id');
-    const detailsDiv = document.getElementById('cultivo-details');
-    
-    if (!searchInput || !suggestionsDiv) {
-        console.error('❌ Error creando elementos de autocompletado');
+    if (!cultivoInput) {
+        console.error('❌ Elemento de cultivo no encontrado');
         return;
     }
     
     // Evento de búsqueda en tiempo real
-    searchInput.addEventListener('input', function() {
+    cultivoInput.addEventListener('input', function() {
         const query = this.value.toLowerCase();
+        const suggestionsDiv = this.parentElement.querySelector('.autocomplete-suggestions');
         
-        if (query.length >= 2) {
-            const filtered = CROPS_DB.filter(c => 
-                c.nombre.toLowerCase().includes(query) ||
-                c.tipo.toLowerCase().includes(query)
-            );
-            showCropSuggestions(filtered);
-        } else {
-            suggestionsDiv.innerHTML = '';
-            suggestionsDiv.classList.remove('active');
+        if (query.length < 2) {
+            if (suggestionsDiv) suggestionsDiv.innerHTML = '';
+            return;
         }
+        
+        // Filtrar cultivos
+        const filtered = CROPS_DB.filter(c => 
+            c.nombre.toLowerCase().includes(query) ||
+            (c.tipo && c.tipo.toLowerCase().includes(query))
+        );
+        
+        showAutocompleteSuggestions(filtered, suggestionsDiv, 'cultivo');
     });
-    
-    // Evento de foco - mostrar todos los cultivos
-    searchInput.addEventListener('focus', function() {
-        if (this.value.length === 0) {
-            showCropSuggestions(CROPS_DB);
-        }
-    });
-    
-    // Evento para cerrar sugerencias al hacer clic fuera
-    document.addEventListener('click', function(e) {
-        if (!cropContainer.contains(e.target)) {
-            suggestionsDiv.classList.remove('active');
-        }
-    });
-    
-    console.log('✅ Autocompletado de cultivos configurado');
 }
 
-function showCropSuggestions(crops) {
-    const suggestionsDiv = document.getElementById('cultivo-suggestions');
-    if (!suggestionsDiv) return;
+function showAutocompleteSuggestions(items, container, type) {
+    if (!container) return;
     
-    if (crops.length === 0) {
-        suggestionsDiv.innerHTML = `
-            <div class="autocomplete-no-results">
-                <i class="fas fa-search"></i>
-                <p>No se encontraron cultivos</p>
+    if (items.length === 0) {
+        container.innerHTML = `
+            <div style="padding: 10px; color: #666; font-size: 0.9rem; text-align: center;">
+                No se encontraron resultados
             </div>
         `;
-        suggestionsDiv.classList.add('active');
         return;
     }
     
     let html = '';
     
-    crops.forEach(crop => {
+    items.forEach(item => {
         html += `
             <div class="autocomplete-suggestion" 
-                 data-id="${crop.id}"
-                 data-name="${crop.nombre}">
-                <div class="suggestion-icon">
-                    <i class="${crop.icono}"></i>
-                </div>
-                <div class="suggestion-content">
-                    <div class="suggestion-title">${crop.nombre}</div>
-                    <div class="suggestion-subtitle">
-                        <span class="info-badge badge-type">${crop.tipo}</span>
-                        <span class="info-badge">${crop.familia}</span>
-                        <span class="info-badge">Factor: ${crop.factorDosis}</span>
-                    </div>
-                </div>
+                 data-id="${item.id}"
+                 data-name="${item.nombre}"
+                 data-type="${type}">
+                ${item.nombre}
+                ${type === 'plaguicida' ? `<small style="color: #666; float: right;">${item.toxicidad}</small>` : ''}
             </div>
         `;
     });
     
-    html += `
-        <div class="autocomplete-count">
-            ${crops.length} resultado${crops.length !== 1 ? 's' : ''}
-        </div>
-    `;
-    
-    suggestionsDiv.innerHTML = html;
-    suggestionsDiv.classList.add('active');
+    container.innerHTML = html;
     
     // Agregar eventos a las sugerencias
-    document.querySelectorAll('.autocomplete-suggestion').forEach(suggestion => {
+    container.querySelectorAll('.autocomplete-suggestion').forEach(suggestion => {
         suggestion.addEventListener('click', function() {
-            selectCrop(this);
+            selectAutocompleteItem(this);
         });
     });
 }
 
-function selectCrop(element) {
-    const cropId = element.dataset.id;
-    const cropName = element.dataset.name;
-    const searchInput = document.getElementById('cultivo-search');
-    const hiddenInput = document.getElementById('cultivo-id');
-    const detailsDiv = document.getElementById('cultivo-details');
-    const suggestionsDiv = document.getElementById('cultivo-suggestions');
+function selectAutocompleteItem(element) {
+    const id = element.dataset.id;
+    const name = element.dataset.name;
+    const type = element.dataset.type;
     
-    if (!searchInput || !hiddenInput) {
-        console.error('❌ Error: Elementos no encontrados');
-        return;
-    }
-    
-    // Buscar el cultivo en la base de datos
-    const crop = CROPS_DB.find(c => c.id === parseInt(cropId));
-    if (!crop) {
-        showAlert('Cultivo no encontrado', 'danger');
-        return;
-    }
-    
-    // Actualizar inputs
-    searchInput.value = cropName;
-    hiddenInput.value = cropId;
-    
-    // Mostrar detalles
-    if (detailsDiv) {
-        detailsDiv.innerHTML = generateCropDetails(crop);
-        detailsDiv.style.display = 'block';
+    if (type === 'plaguicida') {
+        const input = document.getElementById('plaguicida-input');
+        const detailsDiv = document.getElementById('plaguicida-details');
+        
+        if (input) input.value = name;
+        
+        // Buscar el plaguicida en la base de datos
+        const pesticide = PESTICIDES_DB.find(p => p.id === parseInt(id));
+        if (pesticide && detailsDiv) {
+            detailsDiv.innerHTML = generatePesticideDetails(pesticide);
+            detailsDiv.style.display = 'block';
+        }
+        
+        // Almacenar ID seleccionado
+        window.selectedPesticideId = id;
+        
+    } else if (type === 'cultivo') {
+        const input = document.getElementById('cultivo-input');
+        const detailsDiv = document.getElementById('cultivo-details');
+        
+        if (input) input.value = name;
+        
+        // Buscar el cultivo en la base de datos
+        const crop = CROPS_DB.find(c => c.id === parseInt(id));
+        if (crop && detailsDiv) {
+            detailsDiv.innerHTML = generateCropDetails(crop);
+            detailsDiv.style.display = 'block';
+        }
+        
+        // Almacenar ID seleccionado
+        window.selectedCropId = id;
     }
     
     // Ocultar sugerencias
-    if (suggestionsDiv) {
-        suggestionsDiv.classList.remove('active');
-    }
+    element.parentElement.innerHTML = '';
     
-    showAlert(`✅ ${cropName} seleccionado`, 'success');
+    showAlert(`✅ ${name} seleccionado`, 'success');
+}
+
+function generatePesticideDetails(pesticide) {
+    const toxicityColor = {
+        'Alta': '#EF4444',
+        'Media': '#F59E0B',
+        'Baja': '#10B981'
+    };
+    
+    return `
+        <div style="background: #F5F3FF; padding: 12px; border-radius: 8px; margin-top: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <i class="${pesticide.icono || 'fas fa-spray-can'}" style="color: #7C3AED;"></i>
+                <div>
+                    <strong>${pesticide.nombre}</strong>
+                    <div style="font-size: 0.8rem; color: #666;">
+                        ${pesticide.tipo} • 
+                        <span style="color: ${toxicityColor[pesticide.toxicidad] || '#666'}">
+                            ${pesticide.toxicidad}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div style="font-size: 0.9rem;">
+                <div><strong>Dosis base:</strong> ${pesticide.dosisBase} ${pesticide.unidad}</div>
+                <div><strong>Carencia:</strong> ${pesticide.carenciaBase} días</div>
+            </div>
+        </div>
+    `;
 }
 
 function generateCropDetails(crop) {
     return `
-        <div class="details-header">
-            <div class="details-icon">
-                <i class="${crop.icono}"></i>
-            </div>
-            <div class="details-title">
-                <h3>${crop.nombre}</h3>
-                <div class="details-subtitle">
-                    <span>${crop.familia}</span>
-                    <span>•</span>
-                    <span>${crop.tipo}</span>
-                </div>
-            </div>
-        </div>
-        <div class="details-body">
-            <div class="details-row">
-                <div class="detail-item">
-                    <i class="fas fa-calculator"></i>
-                    <div>
-                        <small>Factor Dosis</small>
-                        <strong>${crop.factorDosis}</strong>
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <i class="far fa-calendar"></i>
-                    <div>
-                        <small>Ciclo</small>
-                        <strong>${crop.cicloDias} días</strong>
+        <div style="background: #F0F9FF; padding: 12px; border-radius: 8px; margin-top: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <i class="${crop.icono || 'fas fa-seedling'}" style="color: #10B981;"></i>
+                <div>
+                    <strong>${crop.nombre}</strong>
+                    <div style="font-size: 0.8rem; color: #666;">
+                        ${crop.tipo || 'Cultivo'}
                     </div>
                 </div>
             </div>
-            ${crop.restricciones && crop.restricciones.length > 0 ? `
-                <div class="details-section warning">
-                    <h4><i class="fas fa-exclamation-triangle"></i> Restricciones</h4>
-                    <ul>
-                        ${crop.restricciones.map(r => `<li>${r}</li>`).join('')}
-                    </ul>
-                </div>
-            ` : ''}
+            <div style="font-size: 0.9rem;">
+                <div><strong>Ciclo:</strong> ${crop.cicloDias || 'N/A'} días</div>
+                <div><strong>Rendimiento:</strong> ${crop.rendimientoEsperado || 'N/A'}</div>
+            </div>
         </div>
     `;
 }
 
 // ============================================
-// CÁLCULO DE DOSIS
+// CÁLCULO DE DOSIS - VERSIÓN CORREGIDA
 // ============================================
 
 function calculateDosis() {
     try {
         console.log('🧮 Calculando dosis...');
         
-        // Obtener datos
-        const pesticideId = document.getElementById('plaguicida-id').value;
-        const cropId = document.getElementById('cultivo-id').value;
-        const area = parseFloat(document.getElementById('area').value);
+        // Obtener IDs seleccionados (de las variables globales)
+        const pesticideId = window.selectedPesticideId;
+        const cropId = window.selectedCropId;
+        
+        // Obtener área
+        const areaInput = document.getElementById('area');
+        const area = areaInput ? parseFloat(areaInput.value) : 0;
         
         // Validaciones
         if (!pesticideId) throw new Error('Seleccione un plaguicida');
         if (!cropId) throw new Error('Seleccione un cultivo');
-        if (!area || area <= 0) throw new Error('Ingrese un área válida (mayor que 0)');
+        if (!area || area <= 0 || isNaN(area)) throw new Error('Ingrese un área válida (mayor que 0)');
         
         // Obtener datos completos
         const pesticide = PESTICIDES_DB.find(p => p.id === parseInt(pesticideId));
         const crop = CROPS_DB.find(c => c.id === parseInt(cropId));
         
         if (!pesticide || !crop) {
-            throw new Error('Datos no encontrados');
+            throw new Error('Datos no encontrados en la base de datos');
         }
         
         // Obtener condiciones ambientales
@@ -636,15 +359,26 @@ function calculateDosis() {
         const humidity = parseFloat(document.getElementById('hum-manual').value) || 60;
         const wind = parseFloat(document.getElementById('wind-manual').value) || 5;
         
+        console.log('📊 Datos para cálculo:', { pesticide, crop, area, temp, humidity, wind });
+        
         // 1. Calcular dosis base ajustada por cultivo
-        let dosisAjustada = pesticide.dosisBase * crop.factorDosis;
+        // Usar factorDosis si existe en el cultivo, sino usar 1.0
+        const cropFactor = crop.factorDosis || 1.0;
+        let dosisAjustada = pesticide.dosisBase * cropFactor;
+        
+        console.log('📈 Dosis base ajustada por cultivo:', dosisAjustada);
         
         // 2. Ajustar por condiciones ambientales
         const factorAmbiental = calculateEnvironmentalFactor(temp, humidity, wind);
         dosisAjustada *= factorAmbiental;
         
+        console.log('🌡️ Factor ambiental:', factorAmbiental);
+        console.log('📊 Dosis ajustada por ambiente:', dosisAjustada);
+        
         // 3. Calcular cantidad total
         const cantidadTotal = dosisAjustada * area;
+        
+        console.log('🧪 Cantidad total:', cantidadTotal);
         
         // 4. Calcular carencia final
         const carenciaFinal = calculateFinalCarency(
@@ -674,7 +408,8 @@ function calculateDosis() {
         displayResults(dosisAjustada, cantidadTotal, carenciaFinal, nextApplication, pesticide);
         
         // Habilitar botón de registrar
-        document.getElementById('registrar-btn').disabled = false;
+        const registrarBtn = document.getElementById('registrar-btn');
+        if (registrarBtn) registrarBtn.disabled = false;
         
         // Mostrar alerta de éxito
         showAlert('✅ Cálculo completado correctamente', 'success');
@@ -684,10 +419,6 @@ function calculateDosis() {
         showAlert(`❌ ${error.message}`, 'danger');
     }
 }
-
-// ============================================
-// FUNCIONES AUXILIARES DE CÁLCULO
-// ============================================
 
 function calculateEnvironmentalFactor(temp, humidity, wind) {
     let factor = 1.0;
@@ -725,7 +456,11 @@ function calculateFinalCarency(carenciaBase, cropType, temp, toxicidad) {
         "Hortaliza": 1.2,
         "Grano": 1.0,
         "Frutal": 1.5,
-        "Tubérculo": 1.3
+        "Tubérculo": 1.3,
+        "Semilla": 1.0,
+        "Árbol": 1.5,
+        "Arbusto": 1.3,
+        "Forraje": 0.8
     };
     carencia *= cropFactors[cropType] || 1.0;
     
@@ -769,11 +504,20 @@ function displayResults(dosisAjustada, cantidadTotal, carenciaFinal, nextApplica
         return;
     }
     
-    // Mostrar resultados
+    // Mostrar resultados - verificar que no sean NaN
+    if (isNaN(dosisAjustada) || isNaN(cantidadTotal)) {
+        console.error('❌ Valores NaN en resultados');
+        showAlert('Error en el cálculo: valores no válidos', 'danger');
+        return;
+    }
+    
     dosisResult.textContent = `${dosisAjustada.toFixed(3)} ${pesticide.unidad}`;
-    totalResult.textContent = `${cantidadTotal.toFixed(3)} ${pesticide.unidad.split('/')[0]}`;
+    totalResult.textContent = `${cantidadTotal.toFixed(3)} ${pesticide.unidad.split('/')[0] || 'unidades'}`;
     carenciaResult.textContent = `${carenciaFinal} días`;
-    proximaAplicacion.textContent = nextApplication;
+    
+    if (proximaAplicacion) {
+        proximaAplicacion.textContent = nextApplication;
+    }
     
     // Actualizar mensaje de estado
     if (statusMessage) {
@@ -828,9 +572,16 @@ function setupEventListeners() {
         console.log('✅ Evento NFC configurado');
     }
     
-    // Validación de EPI en tiempo real
-    document.querySelectorAll('.epi-checkbox input').forEach(cb => {
-        cb.addEventListener('change', validateEPI);
+    // EPI items
+    document.querySelectorAll('.epi-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const epi = this.getAttribute('data-epi');
+            const checkbox = this.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                this.classList.toggle('active', checkbox.checked);
+            }
+        });
     });
     
     // Validar clima en tiempo real
@@ -851,6 +602,9 @@ function updateWeatherRecommendation() {
     
     if (!adviceElement) return;
     
+    const recContent = adviceElement.querySelector('.rec-content p');
+    if (!recContent) return;
+    
     let recommendation = '✅ Condiciones favorables para aplicación';
     
     if (temp > 35) {
@@ -863,32 +617,7 @@ function updateWeatherRecommendation() {
         recommendation = '⚠️ Viento moderado - Usar boquillas antideriva';
     }
     
-    adviceElement.textContent = recommendation;
-}
-
-function validateEPI() {
-    const pesticideId = document.getElementById('plaguicida-id').value;
-    if (!pesticideId) return;
-    
-    const pesticide = PESTICIDES_DB.find(p => p.id === parseInt(pesticideId));
-    if (!pesticide) return;
-    
-    // Verificar EPIs marcados
-    const epiRequired = pesticide.epiRequerido || [];
-    let missingEPI = [];
-    
-    epiRequired.forEach(epi => {
-        const checkbox = document.getElementById(`epi-${epi}`);
-        if (checkbox && !checkbox.checked) {
-            missingEPI.push(epi);
-        }
-    });
-    
-    // Mostrar advertencia si falta EPI
-    if (missingEPI.length > 0) {
-        const message = `⚠️ EPI requerido no marcado: ${missingEPI.join(', ')}`;
-        showAlert(message, 'warning');
-    }
+    recContent.textContent = recommendation;
 }
 
 // ============================================
@@ -902,14 +631,13 @@ function clearForm() {
     const tipoSelect = document.getElementById('tipo-plaguicida');
     if (tipoSelect) tipoSelect.value = '';
     
-    const plaguicidaSearch = document.getElementById('plaguicida-search');
-    if (plaguicidaSearch) {
-        plaguicidaSearch.value = '';
-        plaguicidaSearch.disabled = true;
-        plaguicidaSearch.placeholder = 'Seleccione tipo primero';
+    const plaguicidaInput = document.getElementById('plaguicida-input');
+    if (plaguicidaInput) {
+        plaguicidaInput.value = '';
+        plaguicidaInput.disabled = true;
+        plaguicidaInput.placeholder = 'Seleccione tipo primero';
     }
     
-    document.getElementById('plaguicida-id').value = '';
     const plaguicidaDetails = document.getElementById('plaguicida-details');
     if (plaguicidaDetails) {
         plaguicidaDetails.style.display = 'none';
@@ -917,10 +645,9 @@ function clearForm() {
     }
     
     // Limpiar autocompletado de cultivo
-    const cultivoSearch = document.getElementById('cultivo-search');
-    if (cultivoSearch) cultivoSearch.value = '';
+    const cultivoInput = document.getElementById('cultivo-input');
+    if (cultivoInput) cultivoInput.value = '';
     
-    document.getElementById('cultivo-id').value = '';
     const cultivoDetails = document.getElementById('cultivo-details');
     if (cultivoDetails) {
         cultivoDetails.style.display = 'none';
@@ -954,82 +681,18 @@ function clearForm() {
     if (registrarBtn) registrarBtn.disabled = true;
     
     // Limpiar EPI
-    document.querySelectorAll('.epi-checkbox input').forEach(cb => {
-        cb.checked = false;
+    document.querySelectorAll('.epi-item').forEach(item => {
+        item.classList.remove('active');
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (checkbox) checkbox.checked = false;
     });
     
-    // Limpiar estado de compatibilidad
-    const compatibilityStatus = document.getElementById('compatibility-status');
-    if (compatibilityStatus) {
-        compatibilityStatus.style.display = 'none';
-        compatibilityStatus.innerHTML = '';
-    }
+    // Limpiar variables globales
+    window.selectedPesticideId = null;
+    window.selectedCropId = null;
+    window.currentCalculation = null;
     
     showAlert('Formulario limpiado correctamente', 'info');
-}
-
-function initTooltips() {
-    console.log('💡 Configurando tooltips...');
-    
-    // Tooltips simples para íconos
-    const tooltipElements = document.querySelectorAll('[title]');
-    tooltipElements.forEach(element => {
-        element.addEventListener('mouseenter', function(e) {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.textContent = this.title;
-            tooltip.style.cssText = `
-                position: absolute;
-                background: rgba(0,0,0,0.8);
-                color: white;
-                padding: 0.5rem 0.75rem;
-                border-radius: 4px;
-                font-size: 0.8rem;
-                z-index: 10000;
-                white-space: nowrap;
-                pointer-events: none;
-                transform: translate(-50%, -100%);
-                top: ${e.clientY - 10}px;
-                left: ${e.clientX}px;
-            `;
-            document.body.appendChild(tooltip);
-            this._tooltip = tooltip;
-        });
-        
-        element.addEventListener('mousemove', function(e) {
-            if (this._tooltip) {
-                this._tooltip.style.top = (e.clientY - 10) + 'px';
-                this._tooltip.style.left = e.clientX + 'px';
-            }
-        });
-        
-        element.addEventListener('mouseleave', function() {
-            if (this._tooltip) {
-                document.body.removeChild(this._tooltip);
-                this._tooltip = null;
-            }
-        });
-    });
-    
-    console.log('✅ Tooltips configurados');
-}
-
-function initValidations() {
-    console.log('✓ Configurando validaciones...');
-    
-    // Validación de campos numéricos
-    const numericInputs = document.querySelectorAll('input[type="number"]');
-    numericInputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            const value = parseFloat(this.value);
-            if (isNaN(value) || value < 0) {
-                showAlert('Valor inválido. Ingrese un número positivo.', 'warning');
-                this.value = this.defaultValue || '0';
-            }
-        });
-    });
-    
-    console.log('✅ Validaciones configuradas');
 }
 
 // ============================================
@@ -1038,13 +701,12 @@ function initValidations() {
 
 function simulateNFCScan() {
     const nfcBtn = document.getElementById('nfc-simulate');
-    const nfcStatus = document.getElementById('nfc-status');
     const nfcInfo = document.getElementById('nfc-info');
     const loteId = document.getElementById('lote-id');
     const loteCultivo = document.getElementById('lote-cultivo');
     const loteArea = document.getElementById('lote-area');
     
-    if (!nfcBtn || !nfcStatus) return;
+    if (!nfcBtn) return;
     
     console.log('📱 Simulando escaneo NFC...');
     
@@ -1063,23 +725,19 @@ function simulateNFCScan() {
         if (loteCultivo) loteCultivo.textContent = cultivoAleatorio;
         if (loteArea) loteArea.textContent = `${areaAleatoria} ha`;
         
-        nfcStatus.textContent = 'Escaneado';
-        nfcStatus.style.color = '#28A745';
-        nfcStatus.style.fontWeight = 'bold';
-        
         if (nfcInfo) nfcInfo.style.display = 'block';
         
         // Rellenar automáticamente el formulario
-        const cultivoSearch = document.getElementById('cultivo-search');
+        const cultivoInput = document.getElementById('cultivo-input');
         const areaInput = document.getElementById('area');
         
-        if (cultivoSearch) cultivoSearch.value = cultivoAleatorio;
+        if (cultivoInput) cultivoInput.value = cultivoAleatorio;
         if (areaInput) areaInput.value = areaAleatoria;
         
         // Buscar y seleccionar cultivo automáticamente
         const crop = CROPS_DB.find(c => c.nombre === cultivoAleatorio);
         if (crop) {
-            document.getElementById('cultivo-id').value = crop.id;
+            window.selectedCropId = crop.id;
             const detailsDiv = document.getElementById('cultivo-details');
             if (detailsDiv) {
                 detailsDiv.innerHTML = generateCropDetails(crop);
@@ -1118,27 +776,13 @@ function registerApplication() {
         
         console.log('📋 Registro creado:', registro);
         
-        // Mostrar modal de éxito
-        const modal = document.getElementById('successModal');
-        const modalMessage = document.getElementById('modal-message');
-        
-        if (modalMessage) {
-            modalMessage.textContent = `Aplicación registrada para ${registro.crop.nombre} con ${registro.pesticide.nombre}`;
-        }
-        
-        if (modal) {
-            modal.style.display = 'flex';
-        }
+        // Mostrar mensaje de éxito
+        showAlert('✅ Aplicación registrada exitosamente', 'success');
         
         // Limpiar formulario después de registrar
         setTimeout(() => {
             clearForm();
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }, 3000);
-        
-        showAlert('✅ Aplicación registrada exitosamente', 'success');
+        }, 2000);
         
     } catch (error) {
         console.error('❌ Error al registrar:', error);
