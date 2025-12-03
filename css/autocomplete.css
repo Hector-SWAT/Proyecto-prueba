@@ -6,7 +6,6 @@
 .autocomplete-container {
     position: relative;
     width: 100%;
-    margin-top: var(--space-2);
 }
 
 /* Input con autocompletado */
@@ -29,12 +28,6 @@
     box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
-.autocomplete-input:disabled {
-    background: var(--surface-alt);
-    cursor: not-allowed;
-    color: var(--text-tertiary);
-}
-
 /* Lista de sugerencias */
 .autocomplete-suggestions {
     position: absolute;
@@ -52,7 +45,7 @@
     margin-top: var(--space-1);
 }
 
-.autocomplete-suggestions.active {
+.autocomplete-suggestions.show {
     display: block;
     animation: fadeIn 0.2s ease;
 }
@@ -76,17 +69,13 @@
     background: var(--surface-alt);
 }
 
-.autocomplete-suggestion.active {
-    background: var(--primary-ultralight);
-}
-
 .autocomplete-suggestion.selected {
     background: var(--primary-ultralight);
     border-left: 3px solid var(--primary);
 }
 
 /* Icono en sugerencia */
-.suggestion-icon {
+.autocomplete-suggestion i {
     width: 24px;
     height: 24px;
     display: flex;
@@ -98,7 +87,7 @@
     font-size: 0.75rem;
 }
 
-.autocomplete-suggestion.active .suggestion-icon {
+.autocomplete-suggestion.selected i {
     background: var(--primary);
     color: white;
 }
@@ -128,7 +117,7 @@
 }
 
 /* Badges de información */
-.info-badge {
+.suggestion-badge {
     display: inline-block;
     padding: 0.1rem 0.4rem;
     border-radius: 10px;
@@ -199,7 +188,7 @@
 
 .pesticide-details,
 .crop-details {
-    margin-top: var(--space-3);
+    margin-top: var(--space-2);
     padding: var(--space-2);
     background: var(--primary-ultralight);
     border-radius: var(--radius-md);
@@ -344,19 +333,19 @@
     margin-top: var(--space-1);
 }
 
-.epi-item {
+.epi-item-small {
     text-align: center;
     min-width: 45px;
 }
 
-.epi-item i {
+.epi-item-small i {
     display: block;
     font-size: 1rem;
     color: var(--primary);
     margin-bottom: 0.1rem;
 }
 
-.epi-item small {
+.epi-item-small small {
     font-size: 0.65rem;
     color: var(--text-tertiary);
 }
@@ -395,7 +384,6 @@
     border-radius: var(--radius-md);
     margin: var(--space-2) 0;
     font-size: 0.8rem;
-    display: none;
 }
 
 .compatibility-status.valid {
@@ -497,43 +485,6 @@
 }
 
 /* ============================================
-   PREVISUALIZACIÓN DE CÁLCULO
-   ============================================ */
-
-.calculation-preview {
-    padding: var(--space-2);
-    background: rgba(124, 58, 237, 0.05);
-    border-radius: var(--radius-sm);
-    margin: var(--space-1) 0;
-    font-size: 0.75rem;
-    color: var(--primary-dark);
-    border-left: 2px solid var(--primary);
-    display: none;
-}
-
-/* ============================================
-   GRUPOS DE SUGERENCIAS
-   ============================================ */
-
-.suggestion-group {
-    border-bottom: 1px solid var(--border-light);
-}
-
-.suggestion-group:last-child {
-    border-bottom: none;
-}
-
-.group-header {
-    padding: var(--space-1) var(--space-2);
-    background: var(--surface-alt);
-    font-weight: 600;
-    font-size: 0.7rem;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-/* ============================================
    ANIMACIONES
    ============================================ */
 
@@ -561,17 +512,6 @@
     }
 }
 
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
 /* ============================================
    RESPONSIVE PARA AUTOCOMPLETADO
    ============================================ */
@@ -586,7 +526,7 @@
         gap: var(--space-1);
     }
     
-    .suggestion-icon {
+    .autocomplete-suggestion i {
         width: 20px;
         height: 20px;
         font-size: 0.7rem;
@@ -600,7 +540,7 @@
         font-size: 0.65rem;
     }
     
-    .info-badge {
+    .suggestion-badge {
         font-size: 0.55rem;
         padding: 0.05rem 0.3rem;
     }
@@ -608,10 +548,6 @@
     .details-row {
         grid-template-columns: 1fr;
         gap: var(--space-1);
-    }
-    
-    .recommendations-grid {
-        grid-template-columns: 1fr;
     }
 }
 
@@ -632,19 +568,12 @@
         border: none;
         box-shadow: var(--shadow-xl);
     }
-    
-    .pesticide-details,
-    .crop-details {
-        max-height: 150px;
-        overflow-y: auto;
-    }
 }
 
 /* ============================================
    ESTILOS MEJORADOS PARA DETALLES COMPACTOS
    ============================================ */
 
-/* Estilo para cuando hay mucho contenido */
 .pesticide-details.scrollable,
 .crop-details.scrollable {
     max-height: 120px;
@@ -675,26 +604,6 @@
 }
 
 /* ============================================
-   TOOLTIPS PARA AUTOCOMPLETADO
-   ============================================ */
-
-.tooltip {
-    position: absolute;
-    background: rgba(30, 41, 59, 0.9);
-    color: white;
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-sm);
-    font-size: 0.7rem;
-    z-index: 10000;
-    white-space: nowrap;
-    pointer-events: none;
-    max-width: 200px;
-    word-wrap: break-word;
-    white-space: normal;
-    box-shadow: var(--shadow-md);
-}
-
-/* ============================================
    MEJORAS DE USABILIDAD
    ============================================ */
 
@@ -702,21 +611,6 @@
 .autocomplete-input.has-value {
     background: var(--primary-ultralight);
     border-color: var(--primary-light);
-}
-
-/* Estilo para sugerencias destacadas */
-.autocomplete-suggestion.featured {
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(124, 58, 237, 0.1));
-    border-left: 2px solid var(--primary);
-}
-
-/* Estilo para sugerencias recientes */
-.autocomplete-suggestion.recent::before {
-    content: '✓';
-    color: var(--primary);
-    font-size: 0.7rem;
-    margin-right: var(--space-1);
-    opacity: 0.7;
 }
 
 /* Indicador de carga */
@@ -735,35 +629,4 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-}
-
-/* ============================================
-   MEJORAS PARA DARK MODE (PREPARACIÓN)
-   ============================================ */
-
-@media (prefers-color-scheme: dark) {
-    .autocomplete-input {
-        background: rgba(30, 41, 59, 0.5);
-        border-color: rgba(148, 163, 184, 0.3);
-        color: #F1F5F9;
-    }
-    
-    .autocomplete-suggestions {
-        background: #1E293B;
-        border-color: rgba(148, 163, 184, 0.3);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-    }
-    
-    .autocomplete-suggestion {
-        border-color: rgba(148, 163, 184, 0.2);
-        color: #F1F5F9;
-    }
-    
-    .autocomplete-suggestion:hover {
-        background: rgba(148, 163, 184, 0.1);
-    }
-    
-    .autocomplete-suggestion.active {
-        background: rgba(124, 58, 237, 0.2);
-    }
 }
