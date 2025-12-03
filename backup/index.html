@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroTrace | Gestión Inteligente</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Floating Header -->
+    <div class="floating-header">
+        <div class="header-content">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </div>
+                <h1 class="brand-name">Agro<span>Trace</span></h1>
+            </div>
+            
+            <div class="header-meta">
+                <div class="user-badge">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span class="user-name">Diego</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="progress-indicator">
+            <div class="progress-step active" data-step="1">
+                <span class="step-number">1</span>
+                <span class="step-label">Lote</span>
+            </div>
+            <div class="progress-step" data-step="2">
+                <span class="step-number">2</span>
+                <span class="step-label">Registro</span>
+            </div>
+            <div class="progress-step" data-step="3">
+                <span class="step-number">3</span>
+                <span class="step-label">Ambiente</span>
+            </div>
+            <div class="progress-step" data-step="4">
+                <span class="step-number">4</span>
+                <span class="step-label">EPI</span>
+            </div>
+            <div class="progress-step" data-step="5">
+                <span class="step-number">5</span>
+                <span class="step-label">Cálculo</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-scroll">
+        <!-- NFC Scan Section -->
+        <section class="card scan-section">
+            <div class="card-illustration">
+                <div class="illustration-circle">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+            </div>
+            
+            <div class="card-content">
+                <h2 class="card-title">Identificación del Lote</h2>
+                <p class="card-subtitle">Escanea el código NFC para identificar automáticamente el lote</p>
+                
+                <button id="nfc-simulate" class="scan-button">
+                    <div class="scan-icon">
+                        <i class="fas fa-wave-square"></i>
+                    </div>
+                    <span>Simular Escaneo NFC</span>
+                </button>
+                
+                <div class="scan-info" id="nfc-info" style="display: none;">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">ID Lote</span>
+                            <span id="lote-id" class="info-value">LT-001</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Cultivo</span>
+                            <span id="lote-cultivo" class="info-value">Maíz</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Área</span>
+                            <span id="lote-area" class="info-value">2.5 ha</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Registration Form -->
+        <section class="card form-section">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <h2 class="card-title">Registro de Aplicación</h2>
+            </div>
+            
+            <div class="form-container">
+                <!-- Tipo de Plaguicida -->
+                <div class="form-field">
+                    <div class="field-header">
+                        <i class="fas fa-flask"></i>
+                        <label>Tipo de Plaguicida</label>
+                    </div>
+                    <div class="select-wrapper">
+                        <select id="tipo-plaguicida" class="form-select">
+                            <option value="">Seleccione tipo</option>
+                            <option value="INSECTICIDA">Insecticida</option>
+                            <option value="FUNGICIDA">Fungicida</option>
+                            <option value="HERBICIDA">Herbicida</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                </div>
+
+                <!-- Plaguicida Autocomplete -->
+                <div class="form-field">
+                    <div class="field-header">
+                        <i class="fas fa-spray-can"></i>
+                        <label>Plaguicida</label>
+                    </div>
+                    <div id="plaguicida-container"></div>
+                </div>
+
+                <!-- Cultivo Autocomplete -->
+                <div class="form-field">
+                    <div class="field-header">
+                        <i class="fas fa-seedling"></i>
+                        <label>Cultivo</label>
+                    </div>
+                    <div id="cultivo-container"></div>
+                </div>
+
+                <!-- Área -->
+                <div class="form-field">
+                    <div class="field-header">
+                        <i class="fas fa-ruler-combined"></i>
+                        <label>Área (hectáreas)</label>
+                    </div>
+                    <input type="number" id="area" class="form-input" placeholder="2.5" step="0.1" min="0.1">
+                </div>
+
+                <!-- Observaciones -->
+                <div class="form-field full-width">
+                    <div class="field-header">
+                        <i class="fas fa-sticky-note"></i>
+                        <label>Observaciones</label>
+                    </div>
+                    <textarea id="observaciones" class="form-textarea" 
+                              placeholder="Condiciones climáticas, observaciones importantes..."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- Environmental Conditions -->
+        <section class="card environment-section">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-cloud-sun"></i>
+                </div>
+                <h2 class="card-title">Condiciones Ambientales</h2>
+                <span class="status-badge">
+                    <i class="fas fa-tools"></i>
+                    Manual
+                </span>
+            </div>
+            
+            <div class="sensors-grid">
+                <div class="sensor-card">
+                    <div class="sensor-icon temp">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <div class="sensor-content">
+                        <label>Temperatura</label>
+                        <div class="sensor-input">
+                            <input type="number" id="temp-manual" placeholder="25">
+                            <span class="unit">°C</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sensor-card">
+                    <div class="sensor-icon hum">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <div class="sensor-content">
+                        <label>Humedad</label>
+                        <div class="sensor-input">
+                            <input type="number" id="hum-manual" placeholder="60">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sensor-card">
+                    <div class="sensor-icon wind">
+                        <i class="fas fa-wind"></i>
+                    </div>
+                    <div class="sensor-content">
+                        <label>Viento</label>
+                        <div class="sensor-input">
+                            <input type="number" id="wind-manual" placeholder="5">
+                            <span class="unit">km/h</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="recommendation-card" id="weather-advice">
+                <div class="rec-icon">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <div class="rec-content">
+                    <h4>Recomendación</h4>
+                    <p>Complete los datos para obtener recomendaciones específicas</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- EPI Section -->
+        <section class="card epi-section">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h2 class="card-title">Equipo de Protección</h2>
+            </div>
+            
+            <div class="epi-grid">
+                <div class="epi-item" data-epi="guantes">
+                    <div class="epi-icon">
+                        <i class="fas fa-hand-paper"></i>
+                    </div>
+                    <span class="epi-label">Guantes</span>
+                    <input type="checkbox" id="epi-guantes" hidden>
+                </div>
+                
+                <div class="epi-item" data-epi="mascarilla">
+                    <div class="epi-icon">
+                        <i class="fas fa-head-side-mask"></i>
+                    </div>
+                    <span class="epi-label">Mascarilla</span>
+                    <input type="checkbox" id="epi-mascarilla" hidden>
+                </div>
+                
+                <div class="epi-item" data-epi="overol">
+                    <div class="epi-icon">
+                        <i class="fas fa-tshirt"></i>
+                    </div>
+                    <span class="epi-label">Overol</span>
+                    <input type="checkbox" id="epi-overol" hidden>
+                </div>
+                
+                <div class="epi-item" data-epi="gafas">
+                    <div class="epi-icon">
+                        <i class="fas fa-glasses"></i>
+                    </div>
+                    <span class="epi-label">Gafas</span>
+                    <input type="checkbox" id="epi-gafas" hidden>
+                </div>
+                
+                <div class="epi-item" data-epi="botas">
+                    <div class="epi-icon">
+                        <i class="fas fa-shoe-prints"></i>
+                    </div>
+                    <span class="epi-label">Botas</span>
+                    <input type="checkbox" id="epi-botas" hidden>
+                </div>
+            </div>
+            
+            <div class="exposure-field">
+                <div class="field-header">
+                    <i class="far fa-clock"></i>
+                    <label>Tiempo de Exposición</label>
+                </div>
+                <div class="input-with-unit">
+                    <input type="number" id="tiempo-exposicion" placeholder="120">
+                    <span class="unit">minutos</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Calculation Results -->
+        <section class="card calculation-section">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <h2 class="card-title">Cálculo de Dosis</h2>
+            </div>
+            
+            <button id="calcular-btn" class="calculate-button">
+                <div class="calc-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <span>Calcular Dosis</span>
+            </button>
+            
+            <div class="results-container" id="results-container" style="display: none;">
+                <div class="results-grid">
+                    <div class="result-item">
+                        <div class="result-icon">
+                            <i class="fas fa-prescription-bottle"></i>
+                        </div>
+                        <div class="result-content">
+                            <h4>Dosis Recomendada</h4>
+                            <p id="dosis-result" class="result-value">--</p>
+                            <span class="result-unit">por hectárea</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-item">
+                        <div class="result-icon">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <div class="result-content">
+                            <h4>Cantidad Total</h4>
+                            <p id="total-result" class="result-value">--</p>
+                            <span class="result-unit">para el área total</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="results-grid">
+                    <div class="result-item">
+                        <div class="result-icon">
+                            <i class="far fa-calendar-times"></i>
+                        </div>
+                        <div class="result-content">
+                            <h4>Período de Carencia</h4>
+                            <p id="carencia-result" class="result-value">--</p>
+                            <span class="result-unit">días de espera</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-item">
+                        <div class="result-icon">
+                            <i class="far fa-calendar-check"></i>
+                        </div>
+                        <div class="result-content">
+                            <h4>Próxima Aplicación</h4>
+                            <p id="proxima-aplicacion" class="result-value">--</p>
+                            <span class="result-unit">fecha estimada</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="validation-status" id="validation-status">
+                    <div class="status-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="status-content">
+                        <h4>Estado de Validación</h4>
+                        <p id="status-message">Complete el cálculo para verificar</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Action Buttons -->
+        <div class="action-bar">
+            <button id="limpiar-btn" class="action-btn secondary">
+                <i class="fas fa-eraser"></i>
+                <span>Limpiar</span>
+            </button>
+            
+            <button id="historial-btn" class="action-btn">
+                <i class="fas fa-history"></i>
+                <span>Historial</span>
+            </button>
+            
+            <button id="registrar-btn" class="action-btn primary" disabled>
+                <i class="fas fa-check"></i>
+                <span>Guardar</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Inicialización del nuevo diseño
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manejo de EPI items
+            document.querySelectorAll('.epi-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const checkbox = this.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
+                    this.classList.toggle('active', checkbox.checked);
+                });
+            });
+            
+            // Actualizar indicador de progreso
+            function updateProgress(step) {
+                document.querySelectorAll('.progress-step').forEach((el, index) => {
+                    if (index < step) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Mostrar toast
+            window.showToast = function(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                     type === 'error' ? 'exclamation-circle' : 
+                                     'info-circle'}"></i>
+                    <span>${message}</span>
+                `;
+                
+                document.querySelector('.toast-container').appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 10);
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            };
+            
+            // Inicializar
+            updateProgress(1);
+        });
+    </script>
+</body>
+</html>
